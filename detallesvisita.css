@@ -1,0 +1,14 @@
+#title {
+   color: white;
+    top: 0; /* Lo posiciona en la parte superior */
+    width: 100%; /* Opcional: Ancho completo */
+    background-color: white; /* Opcional: Cambia el color de fondo */
+    z-index: 1000; /* Opcional: Ajusta el orden de apilamiento */
+    text-align: center;
+    text-transform: uppercase;
+    padding: 5px;
+  }
+
+  .botonBack{
+    color: rgb(0, 0, 0);
+  }

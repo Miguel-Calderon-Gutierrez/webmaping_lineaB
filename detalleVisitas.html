@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Detalle de Visitas</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <link rel="stylesheet"
+    href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css"
+    integrity="sha384-xOolHFLEh07PJGoPkLv1IbcEPTNtaed2xpHsD9ESMhqIYd0nLMwNLD69Npy4HI+N"
+    crossorigin="anonymous">
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <link rel="stylesheet" href="/detallesvisita.css" />
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <a class="navbar-brand" >Visor droguerías en Florencia</a>
+      
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav ml-auto">
+                <li class="nav-item">
+                    <a class="btn btn-warning botonBack" href="index.html">Volver al Inicio</a>
+                </li>
+            </ul>
+        </div>
+    </nav>
+    
+    
+    
+    <div id="map" style="width: 100%; height: 90vh;"></div>
+
+<!-- Footer -->
+
+
+
+
+
+
+    <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        const cedula = urlParams.get('cedula');
+
+        const map = L.map('map').setView([1.6144, -75.6117], 14); // Coordenadas centradas en Bogotá, Colombia
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+            attribution: '© OpenStreetMap contributors'
+        }).addTo(map);
+
+        async function fetchDrugstores() {
+            const response = await fetch(`http://localhost:8080/geoserver/LineaB/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=LineaB%3Adrogueriasvisitadas&cql_filter=fkcedulavisitante=${cedula}&maxFeatures=50&outputFormat=application%2Fjson`);
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            const data = await response.json();
+            const features = data.features;
+
+            features.forEach((feature) => {
+                const latlng = L.latLng(feature.geometry.coordinates.reverse());
+                L.marker(latlng).addTo(map)
+                    .bindPopup(`<strong>Droguería:</strong> ${feature.properties.nombredrogueria}`);
+            });
+        }
+
+        fetchDrugstores();
+    </script>
+</body>
+</html>

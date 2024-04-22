@@ -1,0 +1,50 @@
+:root {
+  --width-elm-main: 95%;
+}
+
+
+body {
+  color: #ffffff; 
+}
+
+#map {
+  margin: auto;
+  margin-top: 10px;
+  width: var(--width-elm-main);
+  height: 85vh;
+  border-radius: 10px;
+}
+
+#title {
+   
+    top: 0; /* Lo posiciona en la parte superior */
+    width: 100%; /* Opcional: Ancho completo */
+    background-color: white; /* Opcional: Cambia el color de fondo */
+    z-index: 1000; /* Opcional: Ajusta el orden de apilamiento */
+    text-align: center;
+    text-transform: uppercase;
+    padding: 5px;
+  }
+  
+.botonDrogueria{
+  width: 100%;
+}
+
+#infoDrogeria{
+  text-transform: uppercase;
+}
+
+#fotoDrogueria {
+  margin: 10px 0;
+  width: 100%;
+  height: 130px;
+  border-radius: 7px;
+}
+
+#tableVisits{
+    margin: auto;
+    margin-top: 25px;
+    margin-bottom: 25px;
+    width: var(--width-elm-main);
+    height: auto;
+}
