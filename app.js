@@ -3,7 +3,7 @@ var baseMaps, overlayMaps;
 
 // Define un icono personalizado para las droguerías
 const drogueriaIcon = L.icon({
-  iconUrl: "/icono.png",
+  iconUrl: "./icono.png",
   iconSize: [24, 24],
   iconAnchor: [24, 24],
   popupAnchor: [0, -16],
@@ -43,8 +43,7 @@ function getPointsDroguerias() {
 
 
 function getDataDroguerias() {
-  const url =
-    "http://localhost:8080/geoserver/LineaB/wfs?service=WFS&version=1.1.0&request=GetFeature&typeName=LineaB%3Adrogueriasflorencia&outputFormat=application%2Fjson";
+  const url = "http://localhost:8080/geoserver/LineaB/wfs?service=WFS&version=1.1.0&request=GetFeature&typeName=LineaB%3Adrogueriasflorencia&outputFormat=application%2Fjson";
 
   farmacias = L.layerGroup(); // Inicializa la layerGroup aquí
 
@@ -61,23 +60,20 @@ function getDataDroguerias() {
           drogueria.geometry.coordinates[1],
           drogueria.geometry.coordinates[0],
         ];
-        const marker = L.marker(latlng, { icon: drogueriaIcon });
-
+        const marker = L.marker(latlng, { name:drogueria.properties.name,icon: drogueriaIcon });
         const nombre = drogueria.properties.name;
         const idDrogueria = drogueria.properties.id;
         const direccion = drogueria.properties.adress;
         const numero = drogueria.properties.number;
-        //const horario = drogueria.properties.hoursatent;  <b id="infoDrogeria"> <strong>horario: </strong>   ${horario} </b>
 
         const popupContent = `
                               <div>
                                 <b id="infoDrogeria"> <strong>Nombre: </strong>   ${idDrogueria} - ${nombre}</b>  
                                 <br/>
-                                <b id="infoDrogeria"> <strong>direccion: </strong>   ${direccion} </b>  
+                                <b id="infoDrogeria"> <strong>Dirección: </strong>   ${direccion} </b>  
                                 <br/>
-                                <b id="infoDrogeria"> <strong>numero: </strong>   ${numero} </b>  
+                                <b id="infoDrogeria"> <strong>Número: </strong>   ${numero} </b>  
                                 <br/>
-                              
                               </div>
                               <img id="fotoDrogueria" src="${drogueria.properties.photo}"> 
                               <br/>
@@ -85,7 +81,6 @@ function getDataDroguerias() {
                               `;
 
         marker.bindPopup(popupContent);
-
         marker.on("popupopen", () => {
           document
             .querySelector(`#btn-${idDrogueria}`)
@@ -96,24 +91,34 @@ function getDataDroguerias() {
 
         farmacias.addLayer(marker); // Añade cada marcador directamente a la layerGroup
       });
+
       farmacias.addTo(map); // Añade la capa de marcadores al mapa aquí
 
-      // Initialize search control here after data is loaded
+
+      // Inicializa y añade el control de búsqueda después de cargar los datos
       var searchControl = new L.Control.Search({
         layer: farmacias,
-        propertyName: 'name',
+        propertyName: 'name', // Asegúrate que esta propiedad coincide con una propiedad de los marcadores
         autoCollapse: true,
         autoType: false,
-        minLength: 3
+        minLength: 3,
+        marker: false,
+      });
+
+      searchControl.on('search:locationfound', function(e) {
+        if (e.layer instanceof L.Marker) {
+          map.setView(e.latlng, 16);
+          e.layer.openPopup();
+        }
       });
 
       searchControl.addTo(map);
-
     })
     .catch((error) => {
       console.error("Error:", error);
     });
 }
+
 
 //formulario para registrar la visita
 function registrarVisita(geometry, nombreDrogueria) {
@@ -259,8 +264,58 @@ async function fetchVisits() {
 }
 
 
-//pendiente--------------------------------
-function agregarControlBusqueda() {}
+const addLegendsMap=()=>{
+  
+  const legends=[
+    {
+      label:"Drogueria",
+      type:"image",
+      url:"./icono.png",
+      layers:farmacias,
+      inactive:false
+    },
+    {
+      label:"Ubicación Cliente",
+      type:"image",
+      url:"./persona.png"
+    },
+    {
+      label:"Drogueria punto",
+      type:"circle",
+      radius:7,
+      color:"#ff0202",
+      fillColor:"#ff0202",
+      weight:2,
+      inactive:true,
+      layers:[drogueriasflorencia],
+    }
+  ]
+
+  const legend=L.control.Legend({
+    position:"bottomright",
+    collapsed:false,
+    symbolWidth:24,
+    opacity:1,
+    column:1,
+    legends
+  })
+
+  legend.addTo(map);
+
+}
+
+const addMiniMap=()=>{
+
+  var carto_light = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {attribution: '©OpenStreetMap, ©CartoDB',subdomains: 'abcd',maxZoom: 24});
+
+  var minimap = new L.Control.MiniMap(carto_light,
+    {
+        toggleDisplay: true,
+        minimized: false,
+        position: "bottomleft"
+    }).addTo(map);
+
+}
 
 var map;
 
@@ -291,6 +346,13 @@ function main() {
 
   fetchVisits()
 
+  addLegendsMap();
+
+  addMiniMap();
+
+  L.control.scale({
+    imperial:false
+  }).addTo(map);
 
 }
 

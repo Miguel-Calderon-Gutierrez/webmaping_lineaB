@@ -1,0 +1,66 @@
+Proyecto sig:
+
+exportar DB:
+pg_dump -U postgres -W -F p -b -v -f "C:/sig/proyectofinal.sql" proyectofinal
+
+cd C:\Program Files\PostgreSQL\16\bin
+shp2pgsql -s 4326 -I -W LATIN1 C:\sig\capas\DrogueriasFlorencia.shp public.DrogueriasFlorencia>DrogueriasFlorencia.sql
+
+
+CREATE database proyectofinal;
+\c proyectofinal;
+
+3.Otorgamos privilegios al usuario sobre la BD
+
+GRANT ALL PRIVILEGES ON DATABASE proyectofinal TO postgres;
+
+4. Creamos la extensión expasial;
+
+CREATE EXTENSION postgis;
+
+
+psql -d proyectofinal -h localhost -U postgres -p5432 -f DrogueriasFlorencia.sql
+
+-- Crear tabla DrogueriasVisitadas con un id autoincremental
+CREATE TABLE DrogueriasVisitadas(
+  id SERIAL PRIMARY KEY,
+  fkcedulavisitante VARCHAR(50),
+  nombreDrogueria VARCHAR(150),
+  geom GEOMETRY(Point, 4326)
+);
+
+-- Crear tabla Visitante
+CREATE TABLE Visitante(
+  cedula VARCHAR(50) PRIMARY KEY, 
+  nombrevisitante VARCHAR(150)
+);
+
+
+
+CREATE OR REPLACE FUNCTION registrar_visita(
+    cedula_visita VARCHAR,
+    nombre_visitante VARCHAR,
+    nombre_drogueria VARCHAR,
+    tipo_geom VARCHAR,
+    coordenadas FLOAT8[]
+) RETURNS VOID AS $$
+DECLARE
+    punto GEOMETRY;
+BEGIN
+    -- Convertir coordenadas a tipo GEOMETRY
+    punto := ST_SetSRID(ST_MakePoint(coordenadas[1], coordenadas[2]), 4326);
+
+    -- Verificar si el visitante existe
+    IF EXISTS (SELECT 1 FROM Visitante WHERE cedula = cedula_visita) THEN
+        -- Actualizar el nombre del visitante
+        UPDATE Visitante SET nombrevisitante = nombre_visitante WHERE cedula = cedula_visita;
+    ELSE
+        -- Insertar nuevo visitante
+        INSERT INTO Visitante (cedula, nombrevisitante) VALUES (cedula_visita, nombre_visitante);
+    END IF;
+
+    -- Registrar la visita en DrogueriasVisitadas
+    INSERT INTO DrogueriasVisitadas (fkcedulavisitante, nombreDrogueria, geom) 
+    VALUES (cedula_visita, nombre_drogueria, punto);
+END;
+$$ LANGUAGE plpgsql;
